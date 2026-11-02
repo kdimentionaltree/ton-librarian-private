@@ -100,6 +100,7 @@ hex, shard prefixes are hex, all numbers decimal):
 
 ```
 status                                   — indexing progress
+shards <mc-seqno>                        — shard top block ids of a masterchain slice
 block <wc:shard:seqno>                   — block header info
 txs-of-block <wc:shard:seqno>            — transaction hashes of a block
 tx <hash>                                — full transaction with phases

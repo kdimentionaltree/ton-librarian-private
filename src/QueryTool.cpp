@@ -8,6 +8,7 @@
     by the Free Software Foundation, either version 2 of the License, or
     (at your option) any later version.
 */
+#include <algorithm>
 #include <cstdio>
 #include <cstring>
 #include <iostream>
@@ -29,42 +30,43 @@ std::string coins_str(const Coins& c) {
 std::string status_str(AccountStatus s) {
   switch (s) {
     case AccountStatus::Uninit:
-      return "uninit";
+      return "\"uninit\"";
     case AccountStatus::Frozen:
-      return "frozen";
+      return "\"frozen\"";
     case AccountStatus::Active:
-      return "active";
+      return "\"active\"";
     case AccountStatus::Nonexist:
-      return "nonexist";
+      return "\"nonexist\"";
     default:
-      return "?";
+      return "\"?\"";
   }
 }
 
 std::string kind_str(MessageKind k) {
   switch (k) {
     case MessageKind::Int:
-      return "int";
+      return "\"int\"";
     case MessageKind::ExtIn:
-      return "ext_in";
+      return "\"ext_in\"";
     case MessageKind::ExtOut:
-      return "ext_out";
+      return "\"ext_out\"";
     default:
-      return "?";
+      return "\"?\"";
   }
 }
 
+// The id/hash/address helpers return JSON-ready values: quoted strings.
 std::string block_id_str(const ton::BlockId& id) {
-  return PSTRING() << id.workchain << ":" << id.shard << ":" << id.seqno;
+  return PSTRING() << "\"" << id.workchain << ":" << id.shard << ":" << id.seqno << "\"";
 }
 
 std::string block_id_ext_str(const ton::BlockIdExt& id) {
-  return PSTRING() << id.id.workchain << ":" << id.id.shard << ":" << id.id.seqno << ":"
-                   << id.root_hash.to_hex() << ":" << id.file_hash.to_hex();
+  return PSTRING() << "\"" << id.id.workchain << ":" << id.id.shard << ":" << id.id.seqno << ":"
+                   << id.root_hash.to_hex() << ":" << id.file_hash.to_hex() << "\"";
 }
 
 std::string account_str(const Account& a) {
-  return a.to_raw_string();
+  return PSTRING() << "\"" << a.to_raw_string() << "\"";
 }
 
 std::string opt_account(const ParsedMessage& m, bool source) {
@@ -76,7 +78,7 @@ std::string opt_account(const ParsedMessage& m, bool source) {
 
 void print_msg(const MsgRecord& m) {
   std::cout << "{";
-  std::cout << "\"hash\":" << m.hash.to_hex();
+  std::cout << "\"hash\":\"" << m.hash.to_hex() << "\"";
   std::cout << ",\"kind\":" << kind_str(m.kind);
   std::cout << ",\"source\":" << opt_account(m, true);
   std::cout << ",\"dest\":" << opt_account(m, false);
@@ -94,20 +96,20 @@ void print_msg(const MsgRecord& m) {
     std::cout << ",\"opcode\":" << m.opcode;
   }
   if (m.has_body) {
-    std::cout << ",\"body_hash\":" << m.body_hash.to_hex() << ",\"body_bits\":" << m.body_bits;
+    std::cout << ",\"body_hash\":\"" << m.body_hash.to_hex() << "\",\"body_bits\":" << m.body_bits;
   }
   if (m.has_init) {
-    std::cout << ",\"init_state_hash\":" << m.init_state_hash.to_hex();
+    std::cout << ",\"init_state_hash\":\"" << m.init_state_hash.to_hex() << "\"";
   }
   if (m.has_norm_hash) {
-    std::cout << ",\"norm_hash\":" << m.norm_hash.to_hex();
+    std::cout << ",\"norm_hash\":\"" << m.norm_hash.to_hex() << "\"";
   }
   std::cout << "}\n";
 }
 
 void print_tx(const TxRecord& t) {
   std::cout << "{";
-  std::cout << "\"hash\":" << t.hash.to_hex();
+  std::cout << "\"hash\":\"" << t.hash.to_hex() << "\"";
   std::cout << ",\"account\":" << account_str(t.account);
   std::cout << ",\"lt\":" << t.lt;
   std::cout << ",\"now\":" << t.now;
@@ -115,17 +117,17 @@ void print_tx(const TxRecord& t) {
   std::cout << ",\"orig_status\":" << status_str(t.orig_status);
   std::cout << ",\"end_status\":" << status_str(t.end_status);
   std::cout << ",\"total_fees\":" << coins_str(t.total_fees);
-  std::cout << ",\"prev_trans_hash\":" << t.prev_trans_hash.to_hex();
+  std::cout << ",\"prev_trans_hash\":\"" << t.prev_trans_hash.to_hex() << "\"";
   std::cout << ",\"prev_trans_lt\":" << t.prev_trans_lt;
   if (t.has_in_msg) {
-    std::cout << ",\"in_msg\":" << t.in_msg.to_hex();
+    std::cout << ",\"in_msg\":\"" << t.in_msg.to_hex() << "\"";
   }
   std::cout << ",\"out_msgs\":[";
   for (size_t i = 0; i < t.out_msgs.size(); i++) {
     if (i) {
       std::cout << ",";
     }
-    std::cout << t.out_msgs[i].to_hex();
+    std::cout << "\"" << t.out_msgs[i].to_hex() << "\"";
   }
   std::cout << "]";
   std::cout << ",\"descr_type\":" << static_cast<unsigned>(t.descr_type);
@@ -161,13 +163,13 @@ void print_account_state(const AccountStateRecord& s) {
   std::cout << ",\"status\":" << status_str(s.status);
   std::cout << ",\"balance\":" << coins_str(s.balance);
   std::cout << ",\"last_trans_lt\":" << s.last_trans_lt;
-  std::cout << ",\"last_trans_hash\":" << s.last_trans_hash.to_hex();
-  std::cout << ",\"state_hash\":" << s.state_hash.to_hex();
+  std::cout << ",\"last_trans_hash\":\"" << s.last_trans_hash.to_hex() << "\"";
+  std::cout << ",\"state_hash\":\"" << s.state_hash.to_hex() << "\"";
   if (s.data_hash != td::Bits256::zero()) {
-    std::cout << ",\"data_hash\":" << s.data_hash.to_hex();
+    std::cout << ",\"data_hash\":\"" << s.data_hash.to_hex() << "\"";
   }
   if (s.code_hash != td::Bits256::zero()) {
-    std::cout << ",\"code_hash\":" << s.code_hash.to_hex();
+    std::cout << ",\"code_hash\":\"" << s.code_hash.to_hex() << "\"";
   }
   std::cout << ",\"timestamp\":" << s.gen_utime;
   std::cout << ",\"mc_seqno\":" << s.mc_seqno;
@@ -210,6 +212,7 @@ int usage() {
   std::cerr << "usage: ton-librarian-query <db-path> <command> [args]\n"
             << "commands:\n"
             << "  status\n"
+            << "  shards <mc-seqno>\n"
             << "  block <wc:shard:seqno>\n"
             << "  txs-of-block <wc:shard:seqno>\n"
             << "  tx <hash-hex>\n"
@@ -241,8 +244,8 @@ int run(int argc, char** argv) {
     auto p = storage.get_progress();
     std::cout << "{";
     std::cout << "\"mc_seqno\":" << p.mc_seqno;
-    std::cout << ",\"mc_root_hash\":" << p.mc_root_hash.to_hex();
-    std::cout << ",\"mc_file_hash\":" << p.mc_file_hash.to_hex();
+    std::cout << ",\"mc_root_hash\":\"" << p.mc_root_hash.to_hex() << "\"";
+    std::cout << ",\"mc_file_hash\":\"" << p.mc_file_hash.to_hex() << "\"";
     std::cout << ",\"mc_utime\":" << p.mc_utime;
     std::cout << ",\"total_blocks\":" << p.total_blocks;
     std::cout << ",\"total_txs\":" << p.total_txs;
@@ -250,6 +253,30 @@ int run(int argc, char** argv) {
     std::cout << ",\"total_account_states\":" << p.total_account_states;
     std::cout << ",\"total_slices\":" << p.total_slices;
     std::cout << "}\n";
+    return 0;
+  }
+
+  if (cmd == "shards") {
+    if (argc < 4) {
+      return usage();
+    }
+    td::uint32 mc_seqno = parse_limit(argv[3], 0);
+    auto tops = storage.load_prev_tops(mc_seqno);
+    if (tops.empty()) {
+      std::cerr << "no shards stored for mc seqno " << mc_seqno << "\n";
+      return 1;
+    }
+    std::sort(tops.begin(), tops.end(), [](const ton::BlockIdExt& a, const ton::BlockIdExt& b) {
+      return a.id.workchain < b.id.workchain || (a.id.workchain == b.id.workchain && a.id.shard < b.id.shard);
+    });
+    std::cout << "[";
+    for (size_t i = 0; i < tops.size(); i++) {
+      if (i) {
+        std::cout << ",";
+      }
+      std::cout << block_id_ext_str(tops[i]);
+    }
+    std::cout << "]\n";
     return 0;
   }
 
@@ -265,8 +292,8 @@ int run(int argc, char** argv) {
     }
     std::cout << "{";
     std::cout << "\"id\":" << block_id_ext_str(b->id);
-    std::cout << ",\"root_hash\":" << b->id.root_hash.to_hex();
-    std::cout << ",\"file_hash\":" << b->id.file_hash.to_hex();
+    std::cout << ",\"root_hash\":\"" << b->id.root_hash.to_hex() << "\"";
+    std::cout << ",\"file_hash\":\"" << b->id.file_hash.to_hex() << "\"";
     std::cout << ",\"global_id\":" << b->global_id;
     std::cout << ",\"version\":" << b->version;
     std::cout << ",\"gen_utime\":" << b->gen_utime;
@@ -311,7 +338,7 @@ int run(int argc, char** argv) {
       if (i) {
         std::cout << ",";
       }
-      std::cout << txs[i].to_hex();
+      std::cout << "\"" << txs[i].to_hex() << "\"";
     }
     std::cout << "]\n";
     return 0;
@@ -342,7 +369,7 @@ int run(int argc, char** argv) {
       if (i) {
         std::cout << ",";
       }
-      std::cout << txs[i].to_hex();
+      std::cout << "\"" << txs[i].to_hex() << "\"";
     }
     std::cout << "]\n";
     return 0;
@@ -370,7 +397,7 @@ int run(int argc, char** argv) {
       std::cerr << "message content not found\n";
       return 1;
     }
-    std::cout << td::hex_encode(c->as_slice()) << "\n";
+    std::cout << "\"" << td::hex_encode(c->as_slice()) << "\"\n";
     return 0;
   }
 
@@ -384,7 +411,7 @@ int run(int argc, char** argv) {
       if (i) {
         std::cout << ",";
       }
-      std::cout << "{\"tx\":" << links[i].tx_hash.to_hex() << ",\"dir\":"
+      std::cout << "{\"tx\":\"" << links[i].tx_hash.to_hex() << "\",\"dir\":"
                 << static_cast<unsigned>(links[i].dir) << ",\"idx\":" << links[i].idx << "}";
     }
     std::cout << "]\n";
@@ -403,7 +430,7 @@ int run(int argc, char** argv) {
       if (i) {
         std::cout << ",";
       }
-      std::cout << "{\"msg\":" << msgs[i].msg_hash.to_hex() << ",\"dir\":"
+      std::cout << "{\"msg\":\"" << msgs[i].msg_hash.to_hex() << "\",\"dir\":"
                 << static_cast<unsigned>(msgs[i].dir) << ",\"created_lt\":" << msgs[i].created_lt << "}";
     }
     std::cout << "]\n";
