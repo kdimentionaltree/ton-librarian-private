@@ -125,8 +125,11 @@ td::Result<td::actor::ActorOwn<OverlaySource>> OverlaySource::create(const Confi
   }
   ton::Bits256 zero_state_file_hash = zero_state.file_hash;
 
-  TRY_STATUS_PREFIX(td::mkpath(conf.net_db), "cannot create net db directory: ");
   auto key_path = conf.net_db + "/librarian-adnl";
+  // NB: td::mkpath(path) creates every component BEFORE a slash (it treats
+  // `path` as a file name), so "ton-db" alone would be a no-op; passing the
+  // key file path makes it create the net_db directory itself.
+  TRY_STATUS_PREFIX(td::mkpath(key_path, 0755), "cannot create net db directory: ");
   td::Bits256 key_data;
   auto r_key = td::read_file(key_path);
   if (r_key.is_ok() && r_key.ok().size() == 32) {
@@ -475,7 +478,9 @@ void OverlaySource::pump_fetch(td::uint64 fetch_id) {
     return;
   }
   if (local_id_.is_zero() || overlays_.empty()) {
-    // network stack is still starting up
+    // network stack is still starting up; still count the round so that a
+    // fetch can never wait forever (hybrid falls back to liteservers)
+    fetch.attempts++;
     fetch.retry_at = td::Timestamp::in(0.5);
     alarm_timestamp().relax(fetch.retry_at);
     return;
@@ -507,6 +512,10 @@ void OverlaySource::pump_fetch(td::uint64 fetch_id) {
   }
 
   if (cands.empty()) {
+    // No peers known yet (peer discovery may be slow or broken): count the
+    // round as an attempt, otherwise the fetch would retry forever and the
+    // hybrid liteserver fallback would never trigger.
+    fetch.attempts++;
     fetch.retry_at = td::Timestamp::in(0.5);
     alarm_timestamp().relax(fetch.retry_at);
     return;
@@ -673,7 +682,8 @@ void OverlaySource::on_broadcast(ton::overlay::OverlayIdShort overlay_id, td::Bu
   if (B.is_error()) {
     return;
   }
-  auto& b = *B.move_as_ok();
+  auto b_ptr = B.move_as_ok();  // owns the object; keep it alive for the whole handler
+  auto& b = *b_ptr;
   if (b.get_id() == ton::ton_api::tonNode_blockBroadcast::ID) {
     auto& f = static_cast<ton::ton_api::tonNode_blockBroadcast&>(b);
     auto id = ton::create_block_id(f.id_);
