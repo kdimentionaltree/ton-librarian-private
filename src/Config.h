@@ -69,6 +69,9 @@ struct Config {
   std::string db_path = "librarian-db";
   td::uint32 from_seqno = 0;   // first masterchain seqno to index (0 = continue existing db)
   td::uint32 until_seqno = 0;  // stop after this seqno (0 = no limit)
+  // td log verbosity: 0 fatal, 1 error, 2 warning, 3 info (librarian
+  // messages; default), 4 debug (network packet traces)
+  int log_verbosity = 3;
 
   Pipeline pipeline;
   AccountStatesConf account_states;

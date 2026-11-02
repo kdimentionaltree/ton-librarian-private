@@ -15,6 +15,7 @@
 #include "Config.h"
 #include "LibrarianNode.h"
 #include "td/actor/actor.h"
+#include "td/utils/logging.h"
 #include "vm/vm.h"
 
 int main(int argc, char* argv[]) {
@@ -36,6 +37,11 @@ int main(int argc, char* argv[]) {
     std::fprintf(stderr, "invalid config: %s\n", st.to_string().c_str());
     return 1;
   }
+
+  // td verbosity: 0 fatal, 1 error, 2 warning, 3 info, 4 debug (packet
+  // traces). The library default is 5 (everything); INFO keeps the librarian
+  // messages and drops the network debug flood.
+  td::set_verbosity_level(config.log_verbosity);
 
   vm::init_vm().ensure();
 

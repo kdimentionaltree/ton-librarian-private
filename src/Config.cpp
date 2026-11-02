@@ -42,6 +42,8 @@ td::Result<Config> Config::parse(td::MutableSlice json_data) {
   cfg.from_seqno = static_cast<td::uint32>(from_seqno);
   TRY_RESULT(until_seqno, obj.get_optional_long_field("until_seqno", 0));
   cfg.until_seqno = static_cast<td::uint32>(until_seqno);
+  TRY_RESULT(log_verbosity, obj.get_optional_int_field("log_verbosity", cfg.log_verbosity));
+  cfg.log_verbosity = log_verbosity;
 
   // pipeline
   if (obj.has_field("pipeline")) {
@@ -143,6 +145,9 @@ td::Result<Config> Config::parse(td::MutableSlice json_data) {
 }
 
 td::Status Config::validate() const {
+  if (log_verbosity < -1 || log_verbosity > 9) {
+    return td::Status::Error("log_verbosity must be in [-1, 9] (0 fatal, 1 error, 2 warning, 3 info, 4 debug)");
+  }
   if (pipeline.depth < 1 || pipeline.depth > 128) {
     return td::Status::Error("pipeline.depth must be in [1, 128]");
   }

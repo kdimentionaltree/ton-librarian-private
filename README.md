@@ -67,6 +67,8 @@ Config (see `config.example.json`):
   "db": "librarian-db",                // RocksDB directory
   "from_seqno": 0,                     // 0 = continue existing db / start at tip
   "until_seqno": 0,                    // 0 = run forever
+  "log_verbosity": 3,                  // 0 fatal, 1 error, 2 warning, 3 info
+                                       // (librarian messages), 4 debug (packet traces)
   "sync": {
     "mode": "liteservers",             // liteservers | overlay | hybrid
     "liteservers": { "global_config_path": "configs/global.config.json" },

@@ -2,6 +2,7 @@
   "db": "librarian-db",
   "from_seqno": 0,
   "until_seqno": 0,
+  "log_verbosity": 3,
   "sync": {
     "mode": "liteservers",
     "liteservers": {
