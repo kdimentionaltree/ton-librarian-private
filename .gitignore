@@ -1,0 +1,13 @@
+build/
+*.o
+*.a
+librarian-db/
+db/
+ton-db/
+configs/
+config.json
+*.log
+.idea/
+.vscode/
+compile_commands.json
+.clangd/

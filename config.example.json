@@ -1,0 +1,29 @@
+{
+  "db": "librarian-db",
+  "from_seqno": 0,
+  "until_seqno": 0,
+  "sync": {
+    "mode": "liteservers",
+    "liteservers": {
+      "global_config_path": "global.config.json"
+    },
+    "overlay": {
+      "global_config_path": "global.config.json",
+      "listen_addr": "0.0.0.0:30303",
+      "net_db": "ton-db",
+      "use_public_overlays": true,
+      "quic": false,
+      "plumtree": false
+    }
+  },
+  "account_states": {
+    "enabled": true,
+    "max_data_boc_size": 65536
+  },
+  "pipeline": {
+    "depth": 4,
+    "block_fetch_parallelism": 16,
+    "state_fetch_parallelism": 8,
+    "parse_workers": 8
+  }
+}
